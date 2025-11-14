@@ -43,7 +43,15 @@ app.get('/api/pokemons', async (c) => {
 
 /*** リソースの更新 ***/
 app.put('/api/pokemons/:id', async (c) => {
-  return c.json({ path: c.req.path });
+  const pkmns = await kv.list({ prefix: ['pokemons'] });
+
+  const pkmnList = await Array.fromAsync(pkmns);
+  if (pkmnList.length > 0) {
+    return c.json(pkmnList.map((e) => e.value));
+  } else {
+    c.status(404);
+    return c.json({ message: `pkmnコレクションのデータは一つもありませんでした。` });
+  }
 });
 
 /*** リソースの削除 ***/
