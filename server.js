@@ -50,7 +50,28 @@ app.get('/api/pokemons', async (c) => {
 });
 
 /*** リソースの更新 ***/
-app.put('/api/pokemons/:id', async (c) => {});
+app.put('/api/pokemons/:id', async (c) => {
+  const id = Number(c.req.param('id'));
+
+  const pkmns = await kv.list({ prefix: ['pokemons'] });
+  let existed = false;
+  for await (const pkmn of pkmns) {
+    if (pkmn.value.id == id) {
+      existed = true;
+      break;
+    }
+  }
+  if (existed) {
+    const body = await c.req.parseBody();
+    const record = JSON.parse(body['record']);
+    await kv.set(['pokemons', id], record);
+    c.status(204);
+    return c.body(null);
+  } else {
+    c.status(404);
+    return c.json({ message: `IDが${id}のポケモンはいませんでした。` });
+  }
+});
 
 /*** リソースの削除 ***/
 app.delete('/api/pokemons/:id', async (c) => {
