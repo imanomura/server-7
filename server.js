@@ -9,7 +9,18 @@ const kv = await Deno.openKv();
 
 /***  リソースの作成 ***/
 app.post('/api/pokemons', async (c) => {
-  return c.json({ path: c.req.path });
+  const body = await c.req.parseBody();
+  const record = JSON.parse(body['record']);
+
+  const id = await getNextId();
+  record['id'] = id;
+  record['createdAt'] = new Date().toISOString();
+
+  await kv.set(['pokemons', id], record);
+
+  c.status(201);
+  c.header('Location', `/api/pokemons/${id}`);
+  return c.json({ record });
 });
 
 /*** リソースの取得（レコード単体） ***/
